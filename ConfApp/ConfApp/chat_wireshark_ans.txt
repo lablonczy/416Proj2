@@ -1,0 +1,7 @@
+1. 2 control packets are sent. One Syn, and one Syn-Ack
+
+2.The RTT is 0.000239, calculated by subtracting the ack time from the syn time
+
+3. 4 Packets, 1 control packet
+
+4. 1 control packet, which is repeatedly retransmitted. It is a syn packet
