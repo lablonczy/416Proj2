@@ -1,19 +1,18 @@
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class P2PClient implements Runnable{
+public class chat_client implements Runnable{
 
-	private P2PClient partner;
+	private chat_client partner;
 	private boolean busy, connecting;
 	private PrintWriter writer;
 	private String name;
 	private BufferedReader kbReader;
 
-	public P2PClient(String name, PrintWriter writer, BufferedReader kbReader){
+	public chat_client(String name, PrintWriter writer, BufferedReader kbReader){
 		this.setName(name);
 		this.setWriter(writer);
 		this.setKbReader(kbReader);
@@ -53,7 +52,7 @@ public class P2PClient implements Runnable{
 
 			// Spawn a thread to read from user and write to socket
 			Thread child = new Thread(
-					new P2PClient(name, toSockWriter, kbReader));
+					new chat_client(name, toSockWriter, kbReader));
 			child.start();
 		}
 		catch(Exception e) {
@@ -96,7 +95,7 @@ public class P2PClient implements Runnable{
 		this.getWriter().println(msg);
 	}
 
-	public void pair(P2PClient friend){
+	public void pair(chat_client friend){
 		partner = friend;
 		this.setBusy(true);
 	}
@@ -138,11 +137,11 @@ public class P2PClient implements Runnable{
 		this.writer = writer;
 	}
 
-	public P2PClient getPartner() {
+	public chat_client getPartner() {
 		return partner;
 	}
 
-	public void setPartner(P2PClient partner) {
+	public void setPartner(chat_client partner) {
 		this.partner = partner;
 	}
 

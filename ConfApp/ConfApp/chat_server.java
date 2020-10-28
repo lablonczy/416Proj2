@@ -4,17 +4,15 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class P2PServer implements Runnable {
+public class chat_server implements Runnable {
 
 	private Socket clientSocket;
 
-	private static LinkedList<P2PClient> clients;
+	private static LinkedList<chat_client> clients;
 
-	public P2PServer(Socket socket) {
+	public chat_server(Socket socket) {
 		clientSocket = socket;
 	}
 
@@ -32,7 +30,7 @@ public class P2PServer implements Runnable {
 					new ServerSocket(Integer.parseInt(args[0]));
 
 			// Keep track of active clients
-			clients = new LinkedList<P2PClient>();
+			clients = new LinkedList<chat_client>();
 
 			System.out.println("Waiting for clients ...");
 
@@ -43,7 +41,7 @@ public class P2PServer implements Runnable {
 					Socket clientSock = serverSock.accept();
 
 					// Spawn a thread to read/relay messages from this client
-					Thread child = new Thread(new P2PServer(clientSock));
+					Thread child = new Thread(new chat_server(clientSock));
 					child.start();
 
 					System.out.println("Waiting for clients ...");
@@ -57,15 +55,15 @@ public class P2PServer implements Runnable {
 		}
 	}
 
-	public static synchronized boolean addClient(P2PClient client) {
+	public static synchronized boolean addClient(chat_client client) {
 		return clients.add(client);
 	}
 
-	public static synchronized boolean removeClient(P2PClient client) {
+	public static synchronized boolean removeClient(chat_client client) {
 		return clients.remove(client);
 	}
 
-	public static synchronized void pairClients(P2PClient a, P2PClient b) throws IOException {
+	public static synchronized void pairClients(chat_client a, chat_client b) throws IOException {
 
 		b.setConnecting(true);
 		b.print(a.getName() + " is requesting to connect with you. Press Enter, then Y, then Enter, to accept, Enter twice to deny");
@@ -88,38 +86,38 @@ public class P2PServer implements Runnable {
 
 	public static synchronized void relayMessage(String mesg) {
 		// Iterate through the list and send message to each client
-		for (P2PClient c : clients)
+		for (chat_client c : clients)
 			c.print(mesg);
 	}
 
 	public static synchronized void relayIncludeServer(String mesg) {
 		// Iterate through the list and send message to each client
 		System.out.println(mesg);
-		for (P2PClient c : clients)
+		for (chat_client c : clients)
 			c.print(mesg);
 	}
 
-	public static synchronized void relayMessage(P2PClient exception, String mesg) {
+	public static synchronized void relayMessage(chat_client exception, String mesg) {
 		// Iterate through the list and send message to each client
-		for (P2PClient c : clients){
+		for (chat_client c : clients){
 			if(c == exception)
 				continue;
 			c.print(mesg);
 		}
 	}
 
-	public static synchronized void unpairClients(P2PClient a, P2PClient b) {
+	public static synchronized void unpairClients(chat_client a, chat_client b) {
 		a.unpair();
 		b.unpair();
 	}
 
-	public synchronized void connect(P2PClient client, String line) {
+	public synchronized void connect(chat_client client, String line) {
 		if(line.equals(client.getName())){
 			client.print("Cannot connect to self");
 			return;
 		}
 
-		for(P2PClient c : clients)
+		for(chat_client c : clients)
 			if(c.getName().equals(line)  && (!c.isBusy() || (c.isBusy() && c.getPartner() == client))) {
 				try {
 					pairClients(client, c);
@@ -137,14 +135,14 @@ public class P2PServer implements Runnable {
 
 		builder.append("List of clients and states\n");
 
-		for(P2PClient client : clients)
+		for(chat_client client : clients)
 			builder.append(client.getName()).append(" | ").append(client.isBusy()?"Busy":"Free").append("\n");
 
 		return builder.toString();
 	}
 
-	private P2PClient clientByName(String name){
-		for(P2PClient client : clients)
+	private chat_client clientByName(String name){
+		for(chat_client client : clients)
 			if(client.getName().equals(name))
 				return client;
 
@@ -152,7 +150,7 @@ public class P2PServer implements Runnable {
 	}
 
 	private boolean clientsHasName(String name){
-		for(P2PClient client : clients)
+		for(chat_client client : clients)
 			if(client.getName().equals(name))
 				return true;
 
@@ -162,13 +160,13 @@ public class P2PServer implements Runnable {
 	@Override
 	public void run() {
 
-		P2PClient client = null;
+		chat_client client = null;
 		try(BufferedReader clientReader = new BufferedReader((new InputStreamReader(clientSocket.getInputStream()))); PrintWriter clientWriter = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
 			String clientName = clientReader.readLine();
 			System.out.println("Client " + clientName + " accepted");
 
-			client = new P2PClient(clientName, clientWriter, clientReader);
+			client = new chat_client(clientName, clientWriter, clientReader);
 
 			addClient(client);
 			relayIncludeServer(getAllStates());
@@ -197,7 +195,7 @@ public class P2PServer implements Runnable {
 				else if(!client.isBusy()) {
 
 					if (clientsHasName(line)) {
-						P2PClient temp = clientByName(line);
+						chat_client temp = clientByName(line);
 						if(temp.isBusy() || temp.isConnecting()){
 							client.print(line + " is either currently negotiating connection or is currently connected");
 							continue;
