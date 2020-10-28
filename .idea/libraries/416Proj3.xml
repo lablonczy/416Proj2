@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="416Proj3">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/ConfApp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/threaded_svr.zip!/" />
+      <root url="jar://$PROJECT_DIR$/sqrt.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
